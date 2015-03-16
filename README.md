@@ -3,56 +3,17 @@ Create a json file from a folder. Read [fs2json.py](fs2json.py). Will output som
 
 ```json
 {
-   "fsroot" : [
-      {
-         "type" : 1,
-         "gid" : 1000,
-         "name" : "bar",
-         "uid" : 1000,
-         "mtime" : 1421709361,
-         "mode" : 33188,
-         "size" : 4
-      },
-      {
-         "gid" : 1000,
-         "name" : "bof",
-         "uid" : 1000,
-         "mode" : 41471,
-         "size" : 12,
-         "type" : 2,
-         "target" : "test/foo/bof",
-         "mtime" : 1421709395
-      },
-      {
-         "mtime" : 1421709371,
-         "type" : 0,
-         "children" : [
-            {
-               "gid" : 1000,
-               "name" : "bof",
-               "type" : 1,
-               "size" : 4,
-               "mode" : 33188,
-               "mtime" : 1421709371,
-               "uid" : 1000
-            },
-            {
-               "gid" : 1000,
-               "name" : "bar",
-               "uid" : 1000,
-               "children" : [],
-               "mode" : 16877,
-               "size" : 4096,
-               "type" : 0,
-               "mtime" : 1421709348
-            }
-         ],
-         "uid" : 1000,
-         "mode" : 16877,
-         "size" : 4096,
-         "gid" : 1000,
-         "name" : "foo"
-      }
-   ]
+    "fsroot": [
+        ["bar", 4, 1421709361, 33188, 1000, 1000],
+        ["bof", 12, 1421709395, 41471, 1000, 1000, "test/foo/bof"],
+        ["foo", 4096, 1421709371, 16877, 1000, 1000, [
+            ["bof", 4, 1421709371, 33188, 1000, 1000],
+            ["bar", 4096, 1421709348, 16877, 1000, 1000, []]
+        ]]
+    ],
+    "size": 8212,
+    "version": 2
 }
 ```
+
+The current format is `[name, mode, mtime, size, uid, gid, target]`
