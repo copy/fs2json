@@ -5,6 +5,20 @@ import stat
 import sys
 import itertools
 
+VERSION = 2
+
+IDX_NAME = 0
+IDX_SIZE = 1
+IDX_MTIME = 2
+IDX_MODE = 3
+IDX_UID = 4
+IDX_GID = 5
+
+# target for symbolic links
+# child nodes for directories
+# nothing for files
+IDX_TARGET = 6
+
 # include trailing slash
 PATH = "/mnt/"
 
@@ -18,12 +32,6 @@ EXCLUDE = set([
     #"/tmp/",
 ])
 
-TYPE_DIR = 0
-TYPE_FILE = 1
-TYPE_LINK = 2
-
-DEFAULT_MODE = 0o644
-
 def onerror(oserror):
     raise oserror
 
@@ -34,25 +42,27 @@ prevpath = []
 mainroot = []
 result = {
     "fsroot": mainroot,
+    "version": VERSION,
+    "size": 0,
 }
 rootstack = [mainroot]
 
 def make_node(st, name):
-    obj = {
-        "name": name,
-        "size": st.st_size,
-        #"atime": int(st.st_atime),
-        #"ctime": int(st.st_ctime),
-        "mtime": int(st.st_mtime),
-    }
+    obj = [None] * 7
 
-    if st.st_mode != DEFAULT_MODE:
-        obj["mode"] = st.st_mode
+    obj[IDX_NAME] = name
+    obj[IDX_SIZE] = st.st_size
+    obj[IDX_MTIME] = int(st.st_mtime)
+    obj[IDX_MODE] = int(st.st_mode)
 
-    if st.st_gid:
-        obj["gid"] = st.st_gid
-    if st.st_uid:
-        obj["uid"] = st.st_uid
+    obj[IDX_UID] = st.st_uid
+    obj[IDX_GID] = st.st_gid
+
+    result["size"] += st.st_size
+
+    # Missing:
+    #     int(st.st_atime),
+    #     int(st.st_ctime),
 
     return obj
 
@@ -87,8 +97,7 @@ for f in files:
         root = []
         st = os.stat(dirpath)
         rootobj = make_node(st, openname)
-        rootobj["type"] = TYPE_DIR
-        rootobj["children"] = root
+        rootobj[IDX_TARGET] = root
         oldroot.append(rootobj)
 
     rootstack.append(root)
@@ -107,10 +116,10 @@ for f in files:
 
         if islink:
             target = os.readlink(absname)
-            obj["type"] = TYPE_LINK
-            obj["target"] = target
-        else:
-            obj["type"] = TYPE_FILE
+            obj[IDX_TARGET] = target
+
+        while obj[-1] is None:
+            obj.pop()
 
         root.append(obj)
 
