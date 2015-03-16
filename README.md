@@ -1,5 +1,22 @@
 # fs2json
-Create a json file from a folder. Read [fs2json.py](fs2json.py). Will output something like (formatted for readability):
+
+```
+usage: fs2json.py [-h] [--exclude path] [--out [out]] path
+
+Create filesystem JSON. Example:
+    ./fs2json.py --exclude /boot/ --out fs.json /mnt/
+
+positional arguments:
+  path            Base path to include in JSON
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --exclude path  Path to exclude (relative to base path). Can be specified multiple times.
+  --out [out]     File to write to (defaults to stdout)
+```
+
+
+This script will output something like (formatted for readability):
 
 ```json
 {

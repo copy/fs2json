@@ -28,21 +28,30 @@ def main():
     logger = logging.getLogger("fs2json")
     logger.setLevel(logging.DEBUG)
 
-    args = argparse.ArgumentParser(description="Create filesystem JSON")
+    args = argparse.ArgumentParser(description="Create filesystem JSON. Example:\n"
+                                               "    ./fs2xml.py --exclude /boot/ --out fs.json /mnt/",
+                                   formatter_class=argparse.RawTextHelpFormatter
+                                  )
     args.add_argument("--exclude", 
                       action="append",
-                      help="Paths to exclude")
-    args.add_argument("path", metavar="path", type=str, 
+                      metavar="path",
+                      help="Path to exclude (relative to base path). Can be specified multiple times.")
+    args.add_argument("--out", 
+                      metavar="out",
+                      nargs="?", 
+                      type=argparse.FileType("w"),
+                      help="File to write to (defaults to stdout)",
+                      default=sys.stdout)
+    args.add_argument("path", 
+                      metavar="path", 
                       help="Base path to include in JSON")
 
     args = args.parse_args()
 
     path = args.path
     exclude = args.exclude or []
+    exclude = [os.path.join("/", os.path.normpath(p)) for p in exclude]
     exclude = set(exclude)
-
-    if path[-1] != "/":
-        path += "/"
 
     def onerror(oserror):
         logger.warning(oserror)
@@ -84,7 +93,7 @@ def main():
         dirpath, dirnames, filenames = f
         pathparts = dirpath.split("/")
         pathparts = pathparts[rootdepth:]
-        fullpath = "/%s/" % "/".join(pathparts)
+        fullpath = os.path.join("/", *pathparts)
 
         if fullpath in exclude:
             dirnames[:] = []
@@ -140,7 +149,7 @@ def main():
 
     logger.info("Creating json ...")
 
-    json.dump(result, sys.stdout, check_circular=False, separators=(',', ':'))
+    json.dump(result, args.out, check_circular=False, separators=(',', ':'))
 
 if __name__ == "__main__":
     main()
