@@ -95,13 +95,14 @@ for f in files:
 
     for filename in itertools.chain(filenames, dirnames):
         absname = os.path.join(dirpath, filename)
-        islink = os.path.islink(absname)
-        isdir = os.path.isdir(absname)
+
+        st = os.lstat(absname)
+        isdir = stat.S_ISDIR(st.st_mode)
+        islink = stat.S_ISLNK(st.st_mode)
 
         if isdir and not islink:
             continue
 
-        st = os.lstat(absname)
         obj = make_node(st, filename) 
 
         if islink:
