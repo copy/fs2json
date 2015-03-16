@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import argparse
 import json
 import os
 import stat
@@ -21,30 +22,33 @@ IDX_GID = 5
 # nothing for files
 IDX_TARGET = 6
 
-# include trailing slash
-PATH = "/mnt/"
-
-EXCLUDE = set([
-    "/boot/",
-    #"/dev/",
-    "/lost+found/",
-    #"/proc/",
-    #"/run/",
-    #"/sys/",
-    #"/tmp/",
-])
-
 
 def main():
     logging.basicConfig(format="%(message)s")
     logger = logging.getLogger("fs2json")
     logger.setLevel(logging.DEBUG)
 
+    args = argparse.ArgumentParser(description="Create filesystem JSON")
+    args.add_argument("--exclude", 
+                      action="append",
+                      help="Paths to exclude")
+    args.add_argument("path", metavar="path", type=str, 
+                      help="Base path to include in JSON")
+
+    args = args.parse_args()
+
+    path = args.path
+    exclude = args.exclude or []
+    exclude = set(exclude)
+
+    if path[-1] != "/":
+        path += "/"
+
     def onerror(oserror):
         logger.warning(oserror)
 
-    rootdepth = PATH.count("/")
-    files = os.walk(PATH, onerror=onerror)
+    rootdepth = path.count("/")
+    files = os.walk(path, onerror=onerror)
     prevpath = []
 
     mainroot = []
@@ -82,7 +86,7 @@ def main():
         pathparts = pathparts[rootdepth:]
         fullpath = "/%s/" % "/".join(pathparts)
 
-        if fullpath in EXCLUDE:
+        if fullpath in exclude:
             dirnames[:] = []
             continue
 
