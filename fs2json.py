@@ -3,6 +3,7 @@ import json
 import os
 import stat
 import sys
+import itertools
 
 # include trailing slash
 PATH = "/mnt/"
@@ -92,7 +93,7 @@ for f in files:
 
     rootstack.append(root)
 
-    for filename in filenames + dirnames:
+    for filename in itertools.chain(filenames, dirnames):
         absname = os.path.join(dirpath, filename)
         islink = os.path.islink(absname)
         isdir = os.path.isdir(absname)
