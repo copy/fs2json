@@ -4,6 +4,7 @@ import os
 import stat
 import sys
 import itertools
+import logging
 
 VERSION = 2
 
@@ -32,9 +33,14 @@ EXCLUDE = set([
     #"/tmp/",
 ])
 
+
 def main():
+    logging.basicConfig(format="%(message)s")
+    logger = logging.getLogger("fs2json")
+    logger.setLevel(logging.DEBUG)
+
     def onerror(oserror):
-        raise oserror
+        logger.warning(oserror)
 
     rootdepth = PATH.count("/")
     files = os.walk(PATH, onerror=onerror)
@@ -67,6 +73,7 @@ def main():
 
         return obj
 
+    logger.info("Creating file tree ...")
 
     for f in files:
         dirpath, dirnames, filenames = f
@@ -126,6 +133,7 @@ def main():
 
         prevpath = pathparts
 
+    logger.info("Creating json ...")
 
     json.dump(result, sys.stdout, check_circular=False, separators=(',', ':'))
 
