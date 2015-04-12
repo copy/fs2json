@@ -48,7 +48,8 @@ def main():
 
     args = args.parse_args()
 
-    path = args.path
+    path = os.path.normpath(args.path)
+    path = path + "/"
     exclude = args.exclude or []
     exclude = [os.path.join("/", os.path.normpath(p)) for p in exclude]
     exclude = set(exclude)
