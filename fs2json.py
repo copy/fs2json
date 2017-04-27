@@ -28,10 +28,11 @@ def main():
     logger = logging.getLogger("fs2json")
     logger.setLevel(logging.DEBUG)
 
-    args = argparse.ArgumentParser(description="Create filesystem JSON. Example:\n"
-                                               "    ./fs2xml.py --exclude /boot/ --out fs.json /mnt/",
-                                   formatter_class=argparse.RawTextHelpFormatter
-                                  )
+    args = argparse.ArgumentParser(
+        description="Create filesystem JSON. Example:\n"
+                    "    ./fs2json.py --exclude /boot/ --out fs.json /mnt/",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
     args.add_argument("--exclude", 
                       action="append",
                       metavar="path",
@@ -49,36 +50,36 @@ def main():
     args = args.parse_args()
 
     path = os.path.normpath(args.path)
-    path = path + "/"
+    path += "/"
     exclude = args.exclude or []
     exclude = [os.path.join("/", os.path.normpath(p)) for p in exclude]
     exclude = set(exclude)
 
-    def onerror(oserror):
-        logger.warning(oserror)
+    def onerror(os_error):
+        logger.warning(os_error)
 
-    rootdepth = path.count("/")
+    root_depth = path.count("/")
     files = os.walk(path, onerror=onerror)
-    prevpath = []
+    prev_path = []
 
-    mainroot = []
+    main_root = []
     result = {
-        "fsroot": mainroot,
+        "fsroot": main_root,
         "version": VERSION,
         "size": 0,
     }
-    rootstack = [mainroot]
+    root_stack = [main_root]
 
     def make_node(st, name):
-        obj = [None] * 7
+        node = [None] * 7
 
-        obj[IDX_NAME] = name
-        obj[IDX_SIZE] = st.st_size
-        obj[IDX_MTIME] = int(st.st_mtime)
-        obj[IDX_MODE] = int(st.st_mode)
+        node[IDX_NAME] = name
+        node[IDX_SIZE] = st.st_size
+        node[IDX_MTIME] = int(st.st_mtime)
+        node[IDX_MODE] = int(st.st_mode)
 
-        obj[IDX_UID] = st.st_uid
-        obj[IDX_GID] = st.st_gid
+        node[IDX_UID] = st.st_uid
+        node[IDX_GID] = st.st_gid
 
         result["size"] += st.st_size
 
@@ -86,59 +87,59 @@ def main():
         #     int(st.st_atime),
         #     int(st.st_ctime),
 
-        return obj
+        return node
 
     logger.info("Creating file tree ...")
 
     for f in files:
-        dirpath, dirnames, filenames = f
-        pathparts = dirpath.split("/")
-        pathparts = pathparts[rootdepth:]
-        fullpath = os.path.join("/", *pathparts)
+        dir_path, dir_names, file_names = f
+        path_parts = dir_path.split("/")
+        path_parts = path_parts[root_depth:]
+        fullpath = os.path.join("/", *path_parts)
 
         if fullpath in exclude:
-            dirnames[:] = []
+            dir_names[:] = []
             continue
 
         depth = 0
-        for this, prev in zip(pathparts, prevpath):
+        for this, prev in zip(path_parts, prev_path):
             if this != prev:
                 break
             depth += 1
 
-        for name in prevpath[depth:]:
-            rootstack.pop()
+        for _ in prev_path[depth:]:
+            root_stack.pop()
 
-        oldroot = rootstack[-1]
+        old_root = root_stack[-1]
 
-        assert len(pathparts[depth:]) == 1
-        openname = pathparts[-1]
+        assert len(path_parts[depth:]) == 1
+        open_name = path_parts[-1]
 
-        if openname == "":
-            root = mainroot
+        if open_name == "":
+            root = main_root
         else:
             root = []
-            st = os.stat(dirpath)
-            rootobj = make_node(st, openname)
-            rootobj[IDX_TARGET] = root
-            oldroot.append(rootobj)
+            st = os.stat(dir_path)
+            root_obj = make_node(st, open_name)
+            root_obj[IDX_TARGET] = root
+            old_root.append(root_obj)
 
-        rootstack.append(root)
+        root_stack.append(root)
 
-        for filename in itertools.chain(filenames, dirnames):
-            absname = os.path.join(dirpath, filename)
+        for filename in itertools.chain(file_names, dir_names):
+            abs_name = os.path.join(dir_path, filename)
 
-            st = os.lstat(absname)
+            st = os.lstat(abs_name)
             isdir = stat.S_ISDIR(st.st_mode)
             islink = stat.S_ISLNK(st.st_mode)
 
             if isdir and not islink:
                 continue
 
-            obj = make_node(st, filename) 
+            obj = make_node(st, filename)
 
             if islink:
-                target = os.readlink(absname)
+                target = os.readlink(abs_name)
                 obj[IDX_TARGET] = target
 
             while obj[-1] is None:
@@ -146,7 +147,7 @@ def main():
 
             root.append(obj)
 
-        prevpath = pathparts
+        prev_path = path_parts
 
     logger.info("Creating json ...")
 
