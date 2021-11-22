@@ -1,3 +1,8 @@
+**This project is now maintained in the [v86](https://github.com/copy/v86)
+repository at
+[`tools/fs2json.py`](https://github.com/copy/v86/blob/master/tools/fs2json.py). The old readme is preserved below.**
+
+
 # fs2json
 
 ```
